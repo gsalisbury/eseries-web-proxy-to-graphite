@@ -12,10 +12,10 @@ api_version = 2
 api_path = '/devmgr/v{version}'.format(version=api_version)
 
 #CARBON Session Establishment
-CARBON_SERVER = '127.0.0.1'
+CARBON_SERVER = 'carbon-relay1.apnic.net'
 CARBON_PORT = 2003
-#delay = 25
-delay = 15
+prefix = 'netapp.'
+delay = 60
 sock = socket()
 try:
   sock.connect( (CARBON_SERVER,CARBON_PORT) )
@@ -34,19 +34,19 @@ while True:
 	
 	storage_systems_url = server_root_url + api_path + '/storage-systems'
 	san_controllers = session.get(storage_systems_url).json()
-	lines = []
+	lines = ['netapp']
 	for san_controller in san_controllers:
 		now = int( time.time() )
 		sc_id = san_controller['id']
 		sc_hostname = san_controller['name']
 		#add some extra san information
-		lines.append(sc_hostname + '.info.driveCount ' + str(san_controller['driveCount']) + ' ' + str(now))
-		lines.append(sc_hostname + '.info.freePoolSpace ' + str(san_controller['freePoolSpace']) + ' ' + str(now))
-		lines.append(sc_hostname + '.info.hotSpareCount ' + str(san_controller['hotSpareCount']) + ' ' + str(now))
-		lines.append(sc_hostname + '.info.hotSpareSize ' + str(san_controller['hotSpareSize']) + ' ' + str(now))
-		lines.append(sc_hostname + '.info.trayCount ' + str(san_controller['trayCount']) + ' ' + str(now))
-		lines.append(sc_hostname + '.info.unconfiguredSpace ' + str(san_controller['unconfiguredSpace']) + ' ' + str(now))
-		lines.append(sc_hostname + '.info.usedPoolSpace ' + str(san_controller['usedPoolSpace']) + ' ' + str(now))
+		lines.append(prefix + sc_hostname + '.info.driveCount ' + str(san_controller['driveCount']) + ' ' + str(now))
+		lines.append(prefix + sc_hostname + '.info.freePoolSpace ' + str(san_controller['freePoolSpace']) + ' ' + str(now))
+		lines.append(prefix + sc_hostname + '.info.hotSpareCount ' + str(san_controller['hotSpareCount']) + ' ' + str(now))
+		lines.append(prefix + sc_hostname + '.info.hotSpareSize ' + str(san_controller['hotSpareSize']) + ' ' + str(now))
+		lines.append(prefix + sc_hostname + '.info.trayCount ' + str(san_controller['trayCount']) + ' ' + str(now))
+		lines.append(prefix + sc_hostname + '.info.unconfiguredSpace ' + str(san_controller['unconfiguredSpace']) + ' ' + str(now))
+		lines.append(prefix + sc_hostname + '.info.usedPoolSpace ' + str(san_controller['usedPoolSpace']) + ' ' + str(now))
 		#end extran san information
 		sc_vol_analysis_url = server_root_url + api_path + '/storage-systems/' + sc_id + '/analysed-volume-statistics'
 		#print sc_vol_analysis_url
@@ -62,8 +62,8 @@ while True:
 				if stat <> 'observedTime' and stat <> 'volumeName' and stat <> 'volumeId':
 					#print stat
 					#print avol[stat]
-					#print sc_hostname + '.volumes.' + volName + '.' + stat + ' ' + str(avol[stat]) + ' ' + str(now)
-					lines.append(sc_hostname + '.volumes.' + volName + '.' + stat + ' ' + str(avol[stat]) + ' ' + str(now))
+					#print prefix + sc_hostname + '.volumes.' + volName + '.' + stat + ' ' + str(avol[stat]) + ' ' + str(now)
+					lines.append(prefix + sc_hostname + '.volumes.' + volName + '.' + stat + ' ' + str(avol[stat]) + ' ' + str(now))
 					#print '------stat------'
 			#print '-------------End VOL-----------'
 		#print '--------------------------------'
@@ -73,7 +73,7 @@ while True:
 			volName = thin_vol['name']
 			
 			#will manually grab the stats that I want for the thin volume.
-			tvolprefix = sc_hostname +'.volumes.thin_volumes.' + volName + '.'
+			tvolprefix = prefix + sc_hostname +'.volumes.thin_volumes.' + volName + '.'
 			lines.append(tvolprefix + 'capacity ' + str(thin_vol['capacity']) + ' ' + str(now))
 			lines.append(tvolprefix + 'currentProvisionedCapacity ' + str(thin_vol['currentProvisionedCapacity']) + ' ' + str(now))
 			lines.append(tvolprefix + 'initialProvisionedCapacity ' + str(thin_vol['initialProvisionedCapacity']) + ' ' + str(now))
